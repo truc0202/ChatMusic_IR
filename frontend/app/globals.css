@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+/* Tùy chỉnh thanh cuộn cho toàn bộ trang hoặc phần tử cụ thể */
+.custom-scrollbar-navbar {
+  scrollbar-color: #b4b4b4 transparent; /* Màu thumb và track trong Firefox */
+}
+
+.custom-scrollbar-navbar::-webkit-scrollbar {
+  width: 10px; /* Độ rộng của scrollbar */
+}
+
+.custom-scrollbar-navbar::-webkit-scrollbar-track {
+  background: #0a0a0a; /* Màu nền của track */
+}
+
+.custom-scrollbar-navbar::-webkit-scrollbar-thumb {
+  background: #2f2f2f; /* Màu của thumb */
+  /* border-radius: 4px; Bo tròn góc của thumb */
+}
+
+.custom-scrollbar-navbar::-webkit-scrollbar-thumb:hover {
+  background: #b4b4b4; /* Màu khi hover vào thumb */
+}
