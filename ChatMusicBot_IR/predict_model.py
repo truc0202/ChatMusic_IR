@@ -10,26 +10,29 @@ from sklearn.svm import SVC
 from joblib import load
 import json
 
-# Load stopwords and BERT model
+# Hàm tải stopwordsstopwords
 def load_stopwords():
     sw = []
-    with open("./dataset/data_model/vietnamese-stopwords.txt", encoding='utf-8') as f:
+    with open("C:/Users/Truc/Desktop/HK1 2024-2025/Truy vấn thông tin đa phương tiện CS336/Đồ án chatbot/official_code/chatbot/dataset/data_model/vietnamese-stopwords.txt", encoding='utf-8') as f:
         lines = f.readlines()
         for line in lines:
             sw.append(line.replace("\n",""))
     return sw
 
+# Hàm tải mô hình PhoBert và tokenizer
 def load_bert():
     v_phobert = AutoModel.from_pretrained("vinai/phobert-base")
     v_tokenizer = AutoTokenizer.from_pretrained("vinai/phobert-base", use_fast=False)
     return v_phobert, v_tokenizer
 
+# Hàm chuẩn hóa dữ liệu
 def standardize_data(row):
     row = re.sub(r"[.,?]+$-", "", row)
     row = row.replace(",", " ").replace(".", " ").replace(";", " ").replace("“", " ").replace(":", " ").replace("”", " ").replace('"', " ").replace("'", " ").replace("!", " ").replace("?", " ").replace("-", " ").replace("?", " ")
     row = row.strip().lower()
     return row
 
+# Hàm tạo đặc trưng BERT
 def make_bert_features(v_text, tokenizer, phobert, sw):
     v_tokenized = []
     max_len = 100
@@ -53,52 +56,59 @@ def make_bert_features(v_text, tokenizer, phobert, sw):
     v_features = last_hidden_states[0][:, 0, :].numpy()
     return v_features
 
+# Hàm dự đoán cảm xúc
 def predict_sentiment(text):
-    """Predicts the sentiment of a given text."""
-    # Load the saved model and label mapping
-    model = load('./model/save_model.pkl')
-    label_mapping = load('./model/label_mapping.pkl')
+    """Dự đoán cảm xúc của một đoạn văn bản."""
+    # Tải mô hình đã lưu và ánh xạ nhãn 
+    model = load('./ChatMusicBot_IR/model/save_model.pkl')
+    label_mapping = load('./ChatMusicBot_IR/model/label_mapping.pkl')
 
-    # Inverted label mapping for getting string labels from predictions
+    # Ánh xạ ngược để lấy nhãn dạng chuỗi từ dự đoán
     inverted_label_mapping = {v: k for k, v in label_mapping.items()}
-    # Load PhoBERT and tokenizer (only once)
+    # Tải PhoBert và tokenizer (chỉ một lần)
     phobert, tokenizer = load_bert()
-    phobert.eval()  # Put in evaluation mode
+    phobert.eval()  # Đặt chế độ đánh giá
     sw = load_stopwords()
 
-    # Preprocess the text
+    # Tiền xử lý văn bản 
     processed_text = standardize_data(text)
 
-    # Create BERT features
+    # Tạo đặc trưng BERT 
     features = make_bert_features([processed_text], tokenizer, phobert, sw)
 
-    # Make prediction
-    prediction = model.predict(features)[0]  # Get the predicted class (integer)
+    # Dự đoán 
+    probabilities = model.predict_proba(features)[0]  # Xác suất dự đoán
+    prediction = model.predict(features)[0]  # Lấy nhãn dự đoán (số nguyên)
 
-    # Get the string label
+    # Ánh xạ nhãn dạng chuỗi
     sentiment = inverted_label_mapping[prediction]
 
-    return sentiment
+    # Lấy xác suất cao nhất
+    max_prob = max(probabilities)
+    print(f"Sentiment: {sentiment}, Confidence: {max_prob}")
+    if max_prob > 0.7:
+        return sentiment
+    else:
+        return None # Nếu xác suất không đạt ngưỡng, trả về None
 
+if __name__=="__main__":
+    # Example usage:
+    text = "bình thường thôi" # <0.7 
+    sentiment,confidence = predict_sentiment(text)
+    print(f"Sentiment: {sentiment}, Confidence: {confidence}")
 
-# # Example usage:
-# text = "Tôi đang cảm thấy rất vui"
-# sentiment = predict_sentiment(text)
-# print(f"Sentiment: {sentiment}")
+    # text = "Bài hát này thật buồn"
+    # sentiment = predict_sentiment(text)
+    # print(f"Sentiment: {sentiment}")
 
-# text = "Bài hát này thật buồn"
-# sentiment = predict_sentiment(text)
-# print(f"Sentiment: {sentiment}")
+    # # Example with multiple sentences
+    # sentences = [
+    #     "Hôm nay trời đẹp quá",
+    #     "Bây giờ tôi đang cảm thấy tuyệt vời, bạn nghĩ tôi nên nghe nhạc gì?",
+    #     "Kết quả thật đáng thất vọng",
+    #     "Tôi đang rất buồn và cô đơn",
+    # ]
 
-
-# # Example with multiple sentences
-# sentences = [
-#     "Hôm nay trời đẹp quá",
-#     "Bây giờ tôi đang cảm thấy tuyệt vời, bạn nghĩ tôi nên nghe nhạc gì?",
-#     "Kết quả thật đáng thất vọng",
-#     "Tôi đang rất buồn và cô đơn",
-# ]
-
-# for sentence in sentences:
-#     sentiment = predict_sentiment(sentence)
-#     print(f"Sentence: {sentence}, Sentiment: {sentiment}")
+    # for sentence in sentences:
+    #     sentiment = predict_sentiment(sentence)
+    #     print(f"Sentence: {sentence}, Sentiment: {sentiment}")
