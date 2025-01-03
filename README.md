@@ -5,7 +5,6 @@
   </a>
 </p>
 
-<h1 align="center"><b>NHẬP MÔN CÔNG NGHỆ PHẦN MỀM</b></h1>
 
 # <b> Đề tài: </b> Chatbot Music Recommender System Based on User Emotion.
 
